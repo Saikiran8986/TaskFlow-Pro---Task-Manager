@@ -1,5 +1,3 @@
-// app.js for Kanban Task Manager
-
 document.addEventListener("DOMContentLoaded", () => {
   const addTaskBtn = document.getElementById("addTaskBtn");
   const taskModal = document.getElementById("taskModal");
@@ -7,20 +5,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveTaskBtn = document.getElementById("saveTaskBtn");
   const taskTitle = document.getElementById("taskTitle");
   const taskDescription = document.getElementById("taskDescription");
-  const todoList = document.getElementById("todoList");
 
-  function openModal() {
+  addTaskBtn.addEventListener("click", () => {
     taskModal.style.display = "flex";
-  }
+  });
 
-  function closeModalFunc() {
+  closeModal.addEventListener("click", () => {
     taskModal.style.display = "none";
     taskTitle.value = "";
     taskDescription.value = "";
-  }
-
-  addTaskBtn.addEventListener("click", openModal);
-  closeModal.addEventListener("click", closeModalFunc);
+  });
 
   saveTaskBtn.addEventListener("click", () => {
     const title = taskTitle.value.trim();
@@ -28,76 +22,85 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (title !== "") {
       const task = { id: Date.now(), title, description, status: "todo" };
-      saveTaskToLocal(task);
-      addTaskToUI(task);
-      closeModalFunc();
+      saveTask(task);
+      renderTasks();
+      taskModal.style.display = "none";
+      taskTitle.value = "";
+      taskDescription.value = "";
     }
   });
 
-  function saveTaskToLocal(task) {
+  function saveTask(task) {
     let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
     tasks.push(task);
     localStorage.setItem("kanbanTasks", JSON.stringify(tasks));
   }
 
-  function loadTasks() {
+  function deleteTask(id) {
     let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
-    tasks.forEach((task) => addTaskToUI(task));
+    tasks = tasks.filter((task) => task.id !== id);
+    localStorage.setItem("kanbanTasks", JSON.stringify(tasks));
   }
 
-  function addTaskToUI(task) {
-    const taskDiv = document.createElement("div");
-    taskDiv.classList.add("task");
-    taskDiv.setAttribute("draggable", "true");
-    taskDiv.dataset.id = task.id;
-    taskDiv.dataset.status = task.status;
+  function renderTasks() {
+    document
+      .querySelectorAll(".task-list")
+      .forEach((list) => (list.innerHTML = ""));
+    let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
+    tasks.forEach((task) => {
+      const taskDiv = document.createElement("div");
+      taskDiv.classList.add("task");
+      taskDiv.setAttribute("draggable", "true");
+      taskDiv.dataset.id = task.id;
 
-    taskDiv.innerHTML = `<strong>${task.title}</strong><p>${task.description}</p>`;
+      taskDiv.innerHTML = `
+                <strong>${task.title}</strong>
+                <p>${task.description}</p>
+                <small style="color:#777;">(Double-click to delete)</small>
+            `;
 
-    addDragEvents(taskDiv);
+      taskDiv.addEventListener("dblclick", () => {
+        if (confirm("Delete this task?")) {
+          deleteTask(task.id);
+          renderTasks();
+        }
+      });
 
-    if (task.status === "todo") {
-      todoList.appendChild(taskDiv);
-    } else if (task.status === "in-progress") {
-      document.getElementById("inProgressList").appendChild(taskDiv);
-    } else if (task.status === "done") {
-      document.getElementById("doneList").appendChild(taskDiv);
-    }
-  }
+      taskDiv.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", task.id);
+      });
 
-  function addDragEvents(task) {
-    task.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData("text/plain", task.dataset.id);
+      if (task.status === "todo") {
+        document.getElementById("todoList").appendChild(taskDiv);
+      } else if (task.status === "in-progress") {
+        document.getElementById("inProgressList").appendChild(taskDiv);
+      } else if (task.status === "done") {
+        document.getElementById("doneList").appendChild(taskDiv);
+      }
     });
   }
 
   document.querySelectorAll(".task-list").forEach((list) => {
     list.addEventListener("dragover", (e) => e.preventDefault());
-
     list.addEventListener("drop", (e) => {
       e.preventDefault();
       const id = e.dataTransfer.getData("text/plain");
-      const taskEl = document.querySelector(`[data-id='${id}']`);
-      list.appendChild(taskEl);
-      updateTaskStatus(id, list.id);
+      let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
+      tasks = tasks.map((task) => {
+        if (task.id == id) {
+          task.status =
+            list.id === "todoList"
+              ? "todo"
+              : list.id === "inProgressList"
+              ? "in-progress"
+              : "done";
+        }
+        return task;
+      });
+      localStorage.setItem("kanbanTasks", JSON.stringify(tasks));
+      renderTasks();
     });
   });
 
-  function updateTaskStatus(id, listId) {
-    let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
-    tasks = tasks.map((task) => {
-      if (task.id == id) {
-        task.status =
-          listId === "todoList"
-            ? "todo"
-            : listId === "inProgressList"
-            ? "in-progress"
-            : "done";
-      }
-      return task;
-    });
-    localStorage.setItem("kanbanTasks", JSON.stringify(tasks));
-  }
-
-  loadTasks();
+  renderTasks();
 });
