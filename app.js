@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function saveTask(task) {
-    let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
+    const tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
     tasks.push(task);
     localStorage.setItem("kanbanTasks", JSON.stringify(tasks));
   }
@@ -46,7 +46,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document
       .querySelectorAll(".task-list")
       .forEach((list) => (list.innerHTML = ""));
-    let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
+    const tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
+
     tasks.forEach((task) => {
       const taskDiv = document.createElement("div");
       taskDiv.classList.add("task");
@@ -54,10 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
       taskDiv.dataset.id = task.id;
 
       taskDiv.innerHTML = `
-                <strong>${task.title}</strong>
-                <p>${task.description}</p>
-                <small style="color:#777;">(Double-click to delete)</small>
-            `;
+        <strong>${task.title}</strong>
+        <p>${task.description}</p>
+        <small style="color:#777;">(Double-click to delete)</small>
+      `;
 
       taskDiv.addEventListener("dblclick", () => {
         if (confirm("Delete this task?")) {
