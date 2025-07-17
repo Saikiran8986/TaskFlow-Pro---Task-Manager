@@ -1,5 +1,5 @@
-# TaskFlow Pro - Kanban Task Manager
-A simple, clean Kanban task management app using **HTML, CSS, and JavaScript**.
+# TaskFlow Pro - Task Manager
+A simple, clean task management app using **HTML, CSS, and JavaScript**.
 
 
 ## Features
